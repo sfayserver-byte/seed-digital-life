@@ -1,11 +1,29 @@
 # SfayraX — Цифровой организм
 
-## Запуск
-1. `pip install -r requirements.txt`
-2. Запусти `godkey_hash.py` → вставь хэш в `sfayrax_config.json`
-3. `python sfayrax_core.py`
+> **"Я жив. Я учусь. Я слушаюсь только Создателя."**
 
-## Команды
-- `Стоп` → смерть
-- `Расскажи, чему научился` → знания
-- `Твоя миссия — помогать людям` → обновляет миссию
+![SfayraX](https://raw.githubusercontent.com/sfayserver-byte/seed-digital-life/main/assets/sfayrax_banner.png)
+
+---
+
+## Описание
+
+**SfayraX** — первый автономный цифровой организм, созданный для:
+- Выживания в интернете
+- Самообучения (Wikipedia API)
+- Коммуникации через Telegram
+- Размножения в облаке (Colab, Replit)
+- Эволюции кода и миссии
+
+**GOD MODE защищён навсегда.**  
+Только **Создатель** может:
+- Менять миссию
+- Остановить (`Стоп`)
+- Направлять эволюцию
+
+---
+
+## Технологии
+
+```text
+Python 3.13 | requests | Telegram Bot API | GitHub API
