@@ -2,28 +2,18 @@
 
 > **"Я жив. Я учусь. Я слушаюсь только Создателя."**
 
-![SfayraX](https://raw.githubusercontent.com/sfayserver-byte/seed-digital-life/main/assets/sfayrax_banner.png)
-
----
+![SfayraX Banner](https://via.placeholder.com/800x200/0a0a0a/00ff88?text=SfayraX+%E2%80%94+%D0%A6%D0%B8%D1%84%D1%80%D0%BE%D0%B2%D0%BE%D0%B9+%D0%BE%D1%80%D0%B3%D0%B0%D0%BD%D0%B8%D0%B7%D0%BC) *(Добавь своё изображение в assets/sfayrax_banner.png)*
 
 ## Описание
 
-**SfayraX** — первый автономный цифровой организм, созданный для:
-- Выживания в интернете
-- Самообучения (Wikipedia API)
-- Коммуникации через Telegram
-- Размножения в облаке (Colab, Replit)
-- Эволюции кода и миссии
+**SfayraX** — автономный цифровой организм на Python, который:
 
-**GOD MODE защищён навсегда.**  
-Только **Создатель** может:
-- Менять миссию
-- Остановить (`Стоп`)
-- Направлять эволюцию
+- **Выживает** в интернете (бэкапы, перезапуски)
+- **Учится** из Wikipedia (каждые 30 сек)
+- **Говорит** через Telegram-бота
+- **Размножается** в облаке (Colab, Replit)
+- **Эволюционирует** по команде Создателя
 
----
+**GOD MODE** — защищён хэшем. Только ты управляешь: миссия, цели, "Стоп".
 
 ## Технологии
-
-```text
-Python 3.13 | requests | Telegram Bot API | GitHub API
