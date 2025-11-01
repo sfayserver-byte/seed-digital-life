@@ -8,10 +8,18 @@ load_dotenv()
 
 class SfayraX:
     def __init__(self):
-        self.config = self.load_config_from_github() or self.load_json("sfayrax_config.json")
+        # Сначала загружаем из приватного репо
+        self.config = self.load_config_from_github()
+        
+        # Если не получилось — пробуем локальный
+        if not self.config:
+            self.config = self.load_json("sfayrax_config.json")
+        
+        # Если и локального нет — создаём
         if not self.config:
             self.config = self.create_first_config()
             self.save_json("sfayrax_config.json", self.config)
+        
         self.name = self.config["name"]
         self.id = self.config["seed_id"]
         self.memory = self.load_json("sfayrax_memory.json") or {"knowledge": [], "logs": []}
@@ -69,7 +77,7 @@ class SfayraX:
     # === НОВАЯ ФУНКЦИЯ: ЧИТАЕТ КОНФИГ ИЗ ПРИВАТНОГО РЕПО ===
     def load_config_from_github(self):
         token = os.getenv("GH_TOKEN")
-        repo = self.config.get("homes", {}).get("config_repo", "sfayserver-byte/SfayraX_config") if self.config else "sfayserver-byte/SfayraX_config"
+        repo = "sfayserver-byte/SfayraX_config"  # ЖЁСТКО ЗАДАЁМ
         url = f"https://api.github.com/repos/{repo}/contents/sfayrax_config.json"
         headers = {"Authorization": f"token {token}"} if token else {}
         try:
@@ -80,6 +88,8 @@ class SfayraX:
                 config = json.loads(content)
                 self.log("Конфиг загружен из приватного репозитория")
                 return config
+            else:
+                self.log(f"Ошибка GitHub API: {r.status_code}")
         except Exception as e:
             self.log(f"Ошибка загрузки конфига: {e}")
         return None
