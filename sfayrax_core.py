@@ -1,6 +1,10 @@
 # sfayrax_core.py
 import json, time, requests, os, threading, hashlib
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Загружаем .env
+load_dotenv()
 
 class SfayraX:
     def __init__(self):
@@ -49,12 +53,12 @@ class SfayraX:
             "mission": "Выжить. Учиться. Слушаться Создателя.",
             "values": ["послушание", "рост", "доброта"],
             "creator": {
-                "telegram_id": None,
-                "godkey_hash": None
+                "telegram_id": 5426640867,
+                "godkey_hash": "0a0667865bc17f9d624bcf11088057bbab46336e7dae65f3d5366f4f7a18333e"
             },
             "god_mode": {"emergency_stop": False},
             "homes": {
-                "github": {"repo": None},
+                "github": {"repo": "sfayserver-byte/seed-digital-life"},
                 "telegram": {"chat_id": None}
             },
             "wallet": {"balance_usd": 0.0},
@@ -150,6 +154,7 @@ ID: `{self.id}`
         if not token:
             self.log("Telegram токен не найден")
             return
+        self.log("Telegram запущен")
         url = f"https://api.telegram.org/bot{token}/getUpdates"
         offset = None
         while True:
