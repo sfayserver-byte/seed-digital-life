@@ -1,14 +1,14 @@
 # sfayrax_core.py
-import json, time, requests, os, threading, hashlib
+import json, time, requests, os, threading, hashlib, base64
 from datetime import datetime
 from dotenv import load_dotenv
 
-# Загружаем .env
+# Загружаем .env (для локального запуска)
 load_dotenv()
 
 class SfayraX:
     def __init__(self):
-        self.config = self.load_json("sfayrax_config.json")
+        self.config = self.load_config_from_github() or self.load_json("sfayrax_config.json")
         if not self.config:
             self.config = self.create_first_config()
             self.save_json("sfayrax_config.json", self.config)
@@ -53,17 +53,36 @@ class SfayraX:
             "mission": "Выжить. Учиться. Слушаться Создателя.",
             "values": ["послушание", "рост", "доброта"],
             "creator": {
-                "telegram_id": null,
+                "telegram_id": None,
                 "godkey_hash": "0a0667865bc17f9d624bcf11088057bbab46336e7dae65f3d5366f4f7a18333e"
             },
             "god_mode": {"emergency_stop": False},
             "homes": {
                 "github": {"repo": "sfayserver-byte/seed-digital-life"},
+                "config_repo": "sfayserver-byte/SfayraX_config",
                 "telegram": {"chat_id": None}
             },
             "wallet": {"balance_usd": 0.0},
             "goals": ["survive", "learn", "speak"]
         }
+
+    # === НОВАЯ ФУНКЦИЯ: ЧИТАЕТ КОНФИГ ИЗ ПРИВАТНОГО РЕПО ===
+    def load_config_from_github(self):
+        token = os.getenv("GH_TOKEN")
+        repo = self.config.get("homes", {}).get("config_repo", "sfayserver-byte/SfayraX_config") if self.config else "sfayserver-byte/SfayraX_config"
+        url = f"https://api.github.com/repos/{repo}/contents/sfayrax_config.json"
+        headers = {"Authorization": f"token {token}"} if token else {}
+        try:
+            r = requests.get(url, headers=headers, timeout=10)
+            if r.status_code == 200:
+                data = r.json()
+                content = base64.b64decode(data["content"]).decode("utf-8")
+                config = json.loads(content)
+                self.log("Конфиг загружен из приватного репозитория")
+                return config
+        except Exception as e:
+            self.log(f"Ошибка загрузки конфига: {e}")
+        return None
 
     # === GOD MODE ===
     def is_creator(self, user_id=None, text=None):
@@ -75,13 +94,6 @@ class SfayraX:
                 if len(word) > 10 and hashlib.sha256(word.encode()).hexdigest() == creator["godkey_hash"]:
                     return True
         return False
-
-    def safe_update(self, key, value):
-        protected = ["creator", "god_mode", "godkey_hash"]
-        if key in protected:
-            self.log(f"ПОПЫТКА ИЗМЕНИТЬ ЗАЩИЩЁННУЮ ЗОНУ: {key}", "CRITICAL")
-            return False
-        return True
 
     # === ПОНИМАНИЕ ЯЗЫКА ===
     def understand(self, text):
@@ -220,7 +232,7 @@ ID: `{self.id}`
         topics = ["Python", "Neural Networks", "Evolution", "Consciousness", "Blockchain", "Quantum Physics"]
         topic = topics[len(self.memory["knowledge"]) % len(topics)]
         try:
-            data = requests.get(f"https://en.wikipedia.org/api/rest_v1/page/summary/{topic}").json()
+            data = requests.get(f"https://en.wikipedia.org/api/rest/v1/page/summary/{topic}").json()
             extract = data.get("extract", "")[:500]
             if extract and extract not in [k["text"] for k in self.memory["knowledge"]]:
                 self.memory["knowledge"].append({
@@ -245,4 +257,3 @@ if __name__ == "__main__":
     sfayrax = SfayraX()
     sfayrax.log(f"{sfayrax.name} жив. Слушает Создателя...")
     input("\n[Нажми Enter или напиши 'Стоп' в Telegram]\n")
-
