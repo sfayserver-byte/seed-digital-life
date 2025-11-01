@@ -53,7 +53,7 @@ class SfayraX:
             "mission": "Выжить. Учиться. Слушаться Создателя.",
             "values": ["послушание", "рост", "доброта"],
             "creator": {
-                "telegram_id": 5426640867,
+                "telegram_id": null,
                 "godkey_hash": "0a0667865bc17f9d624bcf11088057bbab46336e7dae65f3d5366f4f7a18333e"
             },
             "god_mode": {"emergency_stop": False},
@@ -245,3 +245,4 @@ if __name__ == "__main__":
     sfayrax = SfayraX()
     sfayrax.log(f"{sfayrax.name} жив. Слушает Создателя...")
     input("\n[Нажми Enter или напиши 'Стоп' в Telegram]\n")
+
