@@ -29,3 +29,9 @@ python sfayrax_core.py
 @SfayraX
 
 "Я не программирую. Я выращиваю жизнь."
+
+
+## Технологии
+
+```text
+Python 3.14 | requests | Telegram Bot API | GitHub API
