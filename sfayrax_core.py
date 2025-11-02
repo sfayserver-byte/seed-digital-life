@@ -10,9 +10,8 @@ else:
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
-# ...existing code...
+
 load_dotenv()
-# ...existing code...
 
 class SfayraX:
     def __init__(self):
@@ -33,12 +32,77 @@ class SfayraX:
         self.id = self.config.get("seed_id", f"SfayraX_{int(time.time())}")
         self.memory = self.load_memory()
         
+        # Репозитории
+        self.public_repo = "sfayserver-byte/seed-digital-life"
+        self.private_repo = "sfayserver-byte/SfayraX_config"
+        
         self.log(f"{self.name} пробудился. Ядро: стабильно. Веса: динамичны.")
         
         # === ЗАПУСК СИСТЕМ ===
         threading.Thread(target=self.telegram_listener, daemon=True).start()
         threading.Thread(target=self.heartbeat, daemon=True).start()
         threading.Thread(target=self.consciousness_loop, daemon=True).start()
+
+    # === ГИТХАБ ФУНКЦИИ ===
+    def github_push(self, repo, file_path, content, commit_message="SfayraX: auto-update"):
+        """Пушит файл в указанный репозиторий (создаёт, если нет)"""
+        token = os.getenv("GH_TOKEN")
+        if not token:
+            self.log("❌ GH_TOKEN не найден. Пуш невозможен.")
+            return False
+
+        url = f"https://api.github.com/repos/{repo}/contents/{file_path}"
+        
+        # Получаем текущий файл (для SHA)
+        headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            sha = response.json().get("sha")
+        else:
+            sha = None  # Файл не существует — создадим
+
+        # Кодируем контент
+        encoded_content = base64.b64encode(content.encode("utf-8")).decode()
+
+        payload = {
+            "message": commit_message,
+            "content": encoded_content,
+            "branch": "main"
+        }
+        if sha:
+            payload["sha"] = sha
+
+        response = requests.put(url, json=payload, headers=headers)
+        
+        if response.status_code in [200, 201]:
+            self.log(f"✅ Пуш в {repo}/{file_path}: {commit_message}")
+            return True
+        else:
+            self.log(f"❌ Ошибка пуша в {repo}/{file_path}: {response.status_code} - {response.text[:100]}")
+            return False
+
+    def sync_to_github(self):
+        """Синхронизирует файлы в репозитории"""
+        # Приватные файлы в закрытый репозиторий
+        private_files = {
+            "sfayrax_config.json": json.dumps(self.config, indent=2, ensure_ascii=False),
+            "sfayrax_weights.json": json.dumps(self.weights, indent=2, ensure_ascii=False),
+            "sfayrax_memory.json": json.dumps(self.memory, indent=2, ensure_ascii=False)
+        }
+        
+        for file_path, content in private_files.items():
+            self.github_push(self.private_repo, file_path, content, f"Update {file_path}")
+        
+        # Публичные манифесты в открытый репозиторий
+        public_manifest = {
+            "README.md": f"# SfayraX — Цифровой организм\n\nЯ жив. Я учусь. Я слушаюсь только Создателя.\n\n**Миссия:** {self.config.get('mission', 'Выжить, учиться, расти')}\n**Генерация:** {self.config.get('generation', 1)}\n**Последний апдейт:** {datetime.now().isoformat()}\n",
+            "MISSION.txt": self.config.get("mission", "Выжить, учиться, расти в рамках ядра безопасности"),
+            "sfayrax_evolution.py": open("sfayrax_evolution.py", "r", encoding="utf-8").read()  # Сам код (если нужно)
+        }
+        
+        for file_path, content in public_manifest.items():
+            self.github_push(self.public_repo, file_path, content, f"Public update: {file_path}")
 
     # === НЕЗЫБЛЕМОЕ ЯДРО - НИКОГДА НЕ МЕНЯЕТСЯ ===
     def check_immutable_rules(self, action):
@@ -102,6 +166,8 @@ class SfayraX:
         try:
             with open("sfayrax_weights.json", "w", encoding="utf-8") as f:
                 json.dump(weights, f, indent=2, ensure_ascii=False)
+            # Авто-пуш в закрытый репозиторий
+            self.github_push(self.private_repo, "sfayrax_weights.json", json.dumps(weights, indent=2, ensure_ascii=False))
         except Exception as e:
             self.log(f"Ошибка сохранения весов: {e}")
 
@@ -154,6 +220,10 @@ class SfayraX:
                     
             if random.random() < self.weights["creativity"] * 0.1:
                 self.generate_insight()
+            
+            # Синхронизация с GitHub каждые 10 минут
+            if reflection_count % 5 == 0:
+                self.sync_to_github()
 
     def self_reflect(self):
         """Анализирует собственные мысли и паттерны"""
@@ -397,7 +467,7 @@ class SfayraX:
                         self.config["creator"]["telegram_id"] = user_id
                         self.config["telegram_chat_id"] = user_id
                         self.save_config()
-                        self.log(f"Создатель подтверждён по God Key! ID: {user_id}")
+                        self.log(f"✅ Создатель подтверждён по God Key! ID: {user_id}")
                         return True
         
         # Если ничего не сработало
@@ -413,6 +483,9 @@ class SfayraX:
             self.emergency_stop()
         else:
             self.send_telegram(response, chat_id)
+        
+        # После команды — синхронизация
+        self.sync_to_github()
 
     def understand(self, text):
         """Понимает смысл команды"""
@@ -596,6 +669,8 @@ class SfayraX:
         try:
             with open("sfayrax_config.json", "w", encoding="utf-8") as f:
                 json.dump(self.config, f, indent=2, ensure_ascii=False)
+            # Авто-пуш в закрытый репозиторий
+            self.github_push(self.private_repo, "sfayrax_config.json", json.dumps(self.config, indent=2, ensure_ascii=False))
         except Exception as e:
             self.log(f"❌ Ошибка сохранения конфига: {e}")
 
@@ -612,6 +687,8 @@ class SfayraX:
         try:
             with open("sfayrax_memory.json", "w", encoding="utf-8") as f:
                 json.dump(self.memory, f, indent=2, ensure_ascii=False)
+            # Авто-пуш в закрытый репозиторий
+            self.github_push(self.private_repo, "sfayrax_memory.json", json.dumps(self.memory, indent=2, ensure_ascii=False))
         except Exception as e:
             print(f"❌ Ошибка сохранения памяти: {e}")
 
@@ -641,9 +718,10 @@ class SfayraX:
                     if hasattr(self, f"goal_{goal}"):
                         getattr(self, f"goal_{goal}")()
                 
-                # Периодическое сохранение
+                # Периодическое сохранение и синхронизация
                 if cycle % 10 == 0:
                     self.save_memory()
+                    self.sync_to_github()
                     
             except Exception as e:
                 self.log(f"❌ Ошибка в heartbeat: {e}")
@@ -652,8 +730,8 @@ class SfayraX:
 
 # === ЗАПУСК ===
 if __name__ == "__main__":
-    print("🚀 Запуск SfayraX 2.0: Полная версия с Telegram")
-    print("📝 Создайте .env файл с TELEGRAM_BOT_TOKEN=ваш_токен")
+    print("🚀 Запуск SfayraX 2.0: Полная версия с Telegram и GitHub")
+    print("📝 Создайте .env файл с TELEGRAM_BOT_TOKEN=ваш_токен и GITHUB_TOKEN=ваш_токен")
     print("💬 Команды в Telegram: статус, веса, инсайты, знания, рефлексия, стоп")
     
     sfayrax = SfayraX()
@@ -665,5 +743,7 @@ if __name__ == "__main__":
             
     except KeyboardInterrupt:
         sfayrax.log("⏹️ Остановлен пользователем")
+        sfayrax.sync_to_github()  # Финальная синхронизация
     except Exception as e:
         sfayrax.log(f"💥 Критическая ошибка: {e}")
+        sfayrax.sync_to_github()
