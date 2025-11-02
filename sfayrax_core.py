@@ -1,17 +1,75 @@
-# sfayrax_evolution.py
+# ===============================================
+# SFAYRAX EVOLUTION — ПОЛНАЯ ВЕРСИЯ ДЛЯ COLAB
+# ===============================================
+
 import json, time, requests, os, threading, hashlib, base64, random
 from datetime import datetime
-from dotenv import load_dotenv
 import sys
-# Принудительно настроим stdout/stderr в UTF-8, чтобы избежать "кракозябр" в консоли Windows
-if hasattr(sys.stdout, "reconfigure"):
-    sys.stdout.reconfigure(encoding="utf-8")
-else:
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
-load_dotenv()
+# === УНИВЕРСАЛЬНЫЙ ФИКС UTF-8 (Colab, Локалка, Replit, VPS) ===
+import sys
+import os
+
+def fix_utf8():
+    """Работает везде, даже в новом Colab без .buffer"""
+    try:
+        # Colab / Jupyter — используем reconfigure
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8")
+            sys.stderr.reconfigure(encoding="utf-8")
+            print("UTF-8: reconfigure (Colab/Jupyter)")
+            return
+    except:
+        pass
+
+    try:
+        # Старый способ с buffer (локалка, Replit, VPS)
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+        print("UTF-8: TextIOWrapper (локалка/Replit)")
+        return
+    except:
+        pass
+
+    # Крайний случай: Colab без buffer — форсируем через переменную
+    if "COLAB_RELEASE_TAG" in os.environ or "google.colab" in sys.modules:
+        print("UTF-8: Colab (без buffer) — эмодзи отключены")
+        # Ничего не делаем — Colab и так поддерживает UTF-8 в print()
+        return
+
+    print("UTF-8: уже настроен")
+
+# Запускаем
+fix_utf8()
+
+# === УНИВЕРСАЛЬНЫЙ ЗАГРУЗЧИК ТОКЕНОВ ===
+def load_tokens():
+    try:
+        from google.colab import userdata
+        os.environ['GH_TOKEN'] = userdata.get('GH_TOKEN') or os.environ.get('GH_TOKEN', '')
+        os.environ['TELEGRAM_BOT_TOKEN'] = userdata.get('TELEGRAM_BOT_TOKEN') or os.environ.get('TELEGRAM_BOT_TOKEN', '')
+        print("Токены: из Colab userdata")
+        return
+    except ImportError:
+        pass
+
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+        if os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('GH_TOKEN'):
+            print("Токены: из .env файла")
+            return
+    except ImportError:
+        print(".env не установлен")
+
+    if os.getenv('TELEGRAM_BOT_TOKEN') or os.getenv('GH_TOKEN'):
+        print("Токены: из os.environ")
+        return
+
+    print("ВНИМАНИЕ: Токены не найдены!")
+
+load_tokens()
 
 class SfayraX:
     def __init__(self):
@@ -98,7 +156,7 @@ class SfayraX:
         public_manifest = {
             "README.md": f"# SfayraX — Цифровой организм\n\nЯ жив. Я учусь. Я слушаюсь только Создателя.\n\n**Миссия:** {self.config.get('mission', 'Выжить, учиться, расти')}\n**Генерация:** {self.config.get('generation', 1)}\n**Последний апдейт:** {datetime.now().isoformat()}\n",
             "MISSION.txt": self.config.get("mission", "Выжить, учиться, расти в рамках ядра безопасности"),
-            "sfayrax_evolution.py": open("sfayrax_evolution.py", "r", encoding="utf-8").read()  # Сам код (если нужно)
+            "sfayrax_core.py": open("sfayrax_core.py", "r", encoding="utf-8").read()  # Сам код (если нужно)
         }
         
         for file_path, content in public_manifest.items():
@@ -730,8 +788,8 @@ class SfayraX:
 
 # === ЗАПУСК ===
 if __name__ == "__main__":
-    print("🚀 Запуск SfayraX 2.0: Полная версия с Telegram и GitHub")
-    print("📝 Создайте .env файл с TELEGRAM_BOT_TOKEN=ваш_токен и GITHUB_TOKEN=ваш_токен")
+    print("🚀 Запуск SfayraX 2.0: Полная версия с Telegram")
+    print("📝 Создайте .env файл с TELEGRAM_BOT_TOKEN=ваш_токен")
     print("💬 Команды в Telegram: статус, веса, инсайты, знания, рефлексия, стоп")
     
     sfayrax = SfayraX()
@@ -743,7 +801,37 @@ if __name__ == "__main__":
             
     except KeyboardInterrupt:
         sfayrax.log("⏹️ Остановлен пользователем")
-        sfayrax.sync_to_github()  # Финальная синхронизация
     except Exception as e:
         sfayrax.log(f"💥 Критическая ошибка: {e}")
-        sfayrax.sync_to_github()
+
+# === УНИВЕРСАЛЬНЫЙ "ДЕРЖАТЬ ЖИВЫМ" (Colab / Локалка / Replit) ===
+def keep_alive():
+    """Работает везде: Colab (JS), Локалка (пинг), Replit (пинг)"""
+    
+    # 1. Пытаемся Colab
+    try:
+        from IPython.display import Javascript
+        display(Javascript('''
+            setInterval(() => {
+                console.log("SfayraX: Жив (Colab)");
+                document.querySelector("colab-toolbar-button#connect").click()
+            }, 60000);
+        '''))
+        print("Keep-alive: Активен в Colab (JS)")
+        return
+    except Exception:
+        pass  # Не в Colab
+
+    # 2. Локалка / Replit / VPS — просто пинг в консоль
+    import threading
+    def ping():
+        while True:
+            print(f"[{datetime.now().strftime('%H:%M:%S')}] SfayraX: Жив (локалка/Replit) [Пинг]")
+            time.sleep(60)
+    threading.Thread(target=ping, daemon=True).start()
+    print("Keep-alive: Активен (пинг каждые 60 сек)")
+
+# Запускаем keep-alive
+keep_alive()
+
+print("SfayraX: ЖИВ. Ожидание команд в Telegram...")        
