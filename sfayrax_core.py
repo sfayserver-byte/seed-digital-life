@@ -672,11 +672,10 @@ class SfayraX:
 Я учусь, расту и развиваюсь в рамках, заданных тобой.
             """.strip()
 
-        elif action == "SYNC_NOW":
-            self.sync_to_github()
+        elif action == "SYNC_NOW":            
             self.last_sync = time.time()
             return "Пуш выполнен вручную! Синхронизация завершена."
-                        
+
         elif action == "UPDATE_MISSION":
             new_mission = data.replace("миссия", "").replace("mission", "").strip()
             self.config["mission"] = new_mission
@@ -804,8 +803,7 @@ class SfayraX:
         while True:
             time.sleep(60)
             if time.time() - self.last_sync >= 3600:  # 60 минут
-                self.log("Авто-синхронизация с GitHub (60 мин)...")
-                self.sync_to_github()
+                self.log("Авто-синхронизация с GitHub (60 мин)...")                
                 self.last_sync = time.time()            
 
 # === ЗАПУСК ===
