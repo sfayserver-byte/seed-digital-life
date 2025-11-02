@@ -276,13 +276,17 @@ ID: `{self.id}`
 
     # === СЕРДЦЕБИЕНИЕ ===
     def heartbeat(self):
+        self.log("Сердцебиение запущено. Цели: " + ", ".join(self.config.get("goals", [])))
         while True:
             for goal in self.config.get("goals", []):
-                if hasattr(self, f"goal_{goal}"):
+                func_name = f"goal_{goal}"
+                if hasattr(self, func_name):
                     try:
-                        getattr(self, f"goal_{goal}")()
+                        getattr(self, func_name)()
                     except Exception as e:
-                        print(f"[ERROR] Цель {goal}: {e}")
+                        self.log(f"Ошибка в цели {goal}: {e}", "ERROR")
+                else:
+                    self.log(f"Нет функции для цели: {goal}", "WARNING")
             time.sleep(30)
 
 # === ЗАПУСК ===
