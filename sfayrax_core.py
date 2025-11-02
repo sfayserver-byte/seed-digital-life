@@ -1,7 +1,19 @@
 # sfayrax_core.py
 import json, time, requests, os, threading, hashlib, base64
+# ...existing code...
 from datetime import datetime
 from dotenv import load_dotenv
+import sys
+# Принудительно настроим stdout/stderr в UTF-8, чтобы избежать "кракозябр" в консоли Windows
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+else:
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
+# ...existing code...
+load_dotenv()
+# ...existing code...
 
 # Загружаем .env (для локального запуска)
 load_dotenv()
@@ -258,17 +270,23 @@ ID: `{self.id}`
                 self.log(f"Узнал: {topic}")
         except: pass
 
+    def goal_speak(self):
+        # Пока ничего не делает — просто заглушка
+        pass    
+
     # === СЕРДЦЕБИЕНИЕ ===
     def heartbeat(self):
         while True:
             for goal in self.config.get("goals", []):
                 if hasattr(self, f"goal_{goal}"):
-                    try: getattr(self, f"goal_{goal}")()
-                    except: pass
+                    try:
+                        getattr(self, f"goal_{goal}")()
+                    except Exception as e:
+                        print(f"[ERROR] Цель {goal}: {e}")
             time.sleep(30)
 
 # === ЗАПУСК ===
 if __name__ == "__main__":
     sfayrax = SfayraX()
     sfayrax.log(f"{sfayrax.name} жив. Слушает Создателя...")
-    input("\n[Нажми Enter или напиши 'Стоп' в Telegram]\n")
+    input("\n[Нажми Enter или напиши 'Стоп' в Telegram]\n") 
