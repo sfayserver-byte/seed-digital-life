@@ -8,23 +8,27 @@ load_dotenv()
 
 class SfayraX:
     def __init__(self):
-        # Сначала загружаем из приватного репо
+        # 1. Сначала загружаем конфиг (без логов!)
         self.config = self.load_config_from_github()
         
-        # Если не получилось — пробуем локальный
+        # 2. Если не загрузили — пробуем локальный
         if not self.config:
             self.config = self.load_json("sfayrax_config.json")
         
-        # Если и локального нет — создаём
+        # 3. Если и локального нет — создаём
         if not self.config:
             self.config = self.create_first_config()
             self.save_json("sfayrax_config.json", self.config)
         
-        self.name = self.config["name"]
-        self.id = self.config["seed_id"]
+        # 4. ТЕПЕРЬ инициализируем атрибуты
+        self.name = self.config.get("name", "SfayraX")
+        self.id = self.config.get("seed_id", f"SfayraX_{int(time.time())}")
         self.memory = self.load_json("sfayrax_memory.json") or {"knowledge": [], "logs": []}
+        
+        # 5. ТЕПЕРЬ можно логировать
         self.log(f"{self.name} {self.id} пробудился. Я жив.")
-
+        
+        # 6. Запускаем потоки
         threading.Thread(target=self.telegram_listener, daemon=True).start()
         threading.Thread(target=self.heartbeat, daemon=True).start()
 
@@ -77,7 +81,7 @@ class SfayraX:
     # === НОВАЯ ФУНКЦИЯ: ЧИТАЕТ КОНФИГ ИЗ ПРИВАТНОГО РЕПО ===
     def load_config_from_github(self):
         token = os.getenv("GH_TOKEN")
-        repo = "sfayserver-byte/SfayraX_config"  # ЖЁСТКО ЗАДАЁМ
+        repo = "sfayserver-byte/SfayraX_config"
         url = f"https://api.github.com/repos/{repo}/contents/sfayrax_config.json"
         headers = {"Authorization": f"token {token}"} if token else {}
         try:
@@ -86,12 +90,13 @@ class SfayraX:
                 data = r.json()
                 content = base64.b64decode(data["content"]).decode("utf-8")
                 config = json.loads(content)
-                self.log("Конфиг загружен из приватного репозитория")
+                # НЕ ЛОГИРУЕМ ЗДЕСЬ — self.name ещё нет!
                 return config
             else:
-                self.log(f"Ошибка GitHub API: {r.status_code}")
+                # Можно временно вывести в print
+                print(f"[DEBUG] GitHub API: {r.status_code}")
         except Exception as e:
-            self.log(f"Ошибка загрузки конфига: {e}")
+            print(f"[DEBUG] Ошибка загрузки конфига: {e}")
         return None
 
     # === GOD MODE ===
